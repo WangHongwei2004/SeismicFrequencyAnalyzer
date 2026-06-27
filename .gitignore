@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Packaging
+build/
+dist/
+*.spec.bak
+
+# IDE and local settings
+.vscode/
+.vs/
+*.suo
+*.user
+*.pyproj.user
+
+# Generated analysis outputs
+SeismicFrequencyAnalyzer/two_method_spectrum_output/
+
+# Local raw data
+SeismicFrequencyAnalyzer/data/*
+!SeismicFrequencyAnalyzer/data/.gitkeep
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+Thumbs.db
+.DS_Store
