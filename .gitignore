@@ -33,3 +33,4 @@ SeismicFrequencyAnalyzer/data/*
 *.bak
 Thumbs.db
 .DS_Store
+.cc-connect/
