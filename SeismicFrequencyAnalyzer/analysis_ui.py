@@ -54,14 +54,13 @@ _APP_TITLE = "宽频带地震动卓越频率分析"
 _APP_SUBTITLE = "直接法与间接法频谱计算，自动标注 P1-P4 候选峰 — EVT 智能裁剪"
 
 _WINDOW_SIZE_OPTIONS = {
-    "1024 点 (~7.8s @ 131Hz)": 1024,
-    "2048 点 (~15.6s @ 131Hz)": 2048,
-    "4096 点 (~31.1s @ 131Hz)": 4096,
-    "8192 点 (~62.2s @ 131Hz)": 8192,
+    "1024 点": 1024,
+    "2048 点": 2048,
+    "4096 点": 4096,
+    "8192 点": 8192,
 }
 
 _SAMPLE_RATE_OPTIONS = [
-    ("保持原始采样率", None),
     ("50 Hz", 50.0),
     ("100 Hz", 100.0),
     ("200 Hz", 200.0),
@@ -210,25 +209,19 @@ class MainWindow(QMainWindow):
         layout.addLayout(custom_layout, 1, 2)
 
         # 目标采样率
-        layout.addWidget(QLabel("目标采样率"), 2, 0)
+        layout.addWidget(QLabel("地震仪采样率"), 2, 0)
         self.sample_rate_combo = QComboBox()
         for label, _ in _SAMPLE_RATE_OPTIONS:
             self.sample_rate_combo.addItem(label)
-        self.sample_rate_combo.setCurrentIndex(0)
+        self.sample_rate_combo.setCurrentIndex(1)  # 默认 100 Hz
         layout.addWidget(self.sample_rate_combo, 2, 1)
 
-        # 分量选择
+        # 分量选择（始终处理全部三分量）
         layout.addWidget(QLabel("处理分量"), 2, 2)
         comp_layout = QHBoxLayout()
-        self.ew_check = QCheckBox("EW")
-        self.ew_check.setChecked(True)
-        self.ns_check = QCheckBox("NS")
-        self.ns_check.setChecked(True)
-        self.ud_check = QCheckBox("UD")
-        self.ud_check.setChecked(True)
-        comp_layout.addWidget(self.ew_check)
-        comp_layout.addWidget(self.ns_check)
-        comp_layout.addWidget(self.ud_check)
+        comp_label = QLabel("EW + NS + UD（三分量联合筛选）")
+        comp_label.setStyleSheet("color: #526070; font-size: 12px;")
+        comp_layout.addWidget(comp_label)
         comp_layout.addStretch()
         layout.addLayout(comp_layout, 3, 0, 1, 3)
 
@@ -462,19 +455,7 @@ class MainWindow(QMainWindow):
 
         # 目标采样率
         sr_idx = self.sample_rate_combo.currentIndex()
-        target_sr = _SAMPLE_RATE_OPTIONS[sr_idx][1]
-
-        # 分量选择
-        components: list[str] = []
-        if self.ew_check.isChecked():
-            components.append("EW")
-        if self.ns_check.isChecked():
-            components.append("NS")
-        if self.ud_check.isChecked():
-            components.append("UD")
-        if not components:
-            QMessageBox.warning(self, "参数错误", "请至少选择一个分量。")
-            return
+        instrument_sr = _SAMPLE_RATE_OPTIONS[sr_idx][1]
 
         # 输出目录
         output_dir = self.project_dir / "evt_dat_output"
@@ -484,10 +465,8 @@ class MainWindow(QMainWindow):
         self._append_log("=== EVT 预处理 ===")
         self._append_log(f"输入文件: {evt_path}")
         self._append_log(f"窗口大小: {window_size} 点")
-        self._append_log(
-            f"目标采样率: {target_sr if target_sr else '保持原始'}"
-        )
-        self._append_log(f"分量: {', '.join(components)}")
+        self._append_log(f"地震仪采样率: {instrument_sr:.0f} Hz | 窗口大小: {window_size} 点")
+        self._append_log("分量: EW + NS + UD（三分量联合筛选）")
         self._append_log(f"输出目录: {output_dir}")
         self._append_log("")
 
@@ -503,8 +482,7 @@ class MainWindow(QMainWindow):
             evt_path=evt_path,
             output_dir=output_dir,
             window_size=window_size,
-            target_sample_rate_hz=target_sr,
-            components=components,
+            instrument_sample_rate_hz=instrument_sr,
         )
         self.evt_worker.moveToThread(self.evt_thread)
         self.evt_thread.started.connect(self.evt_worker.run)
@@ -516,16 +494,14 @@ class MainWindow(QMainWindow):
         self.evt_thread.finished.connect(self._evt_thread_done)
         self.evt_thread.start()
 
-    def _evt_finished(self, output_dir: str, count: int,
+    def _evt_finished(self, output_dir: str, dat_path: str,
                       results: dict) -> None:
         self._append_log("")
-        self._append_log(f"=== 预处理完成，已导出 {count} 个 DAT 文件 ===")
-        for comp, info in results.items():
-            self._append_log(
-                f"  {comp}: {Path(info['dat_path']).name} "
-                f"({info['sample_count']} 点 @ {info['sample_rate']:.1f} Hz, "
-                f"得分={info['score']:.4f})"
-            )
+        self._append_log("=== 预处理完成，已导出三分量 DAT 文件 ===")
+        self._append_log(f"  DAT 文件: {Path(dat_path).name}")
+        self._append_log(f"  {results['sample_count']} 点/分量 @ {results['sample_rate']:.1f} Hz")
+        self._append_log(f"  综合得分: {results['score']:.4f}")
+        self._append_log(f"  EW={results['ew_score']:.4f} NS={results['ns_score']:.4f} UD={results['ud_score']:.4f}")
 
     def _evt_failed(self, message: str) -> None:
         self._append_log(message)
