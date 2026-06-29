@@ -49,7 +49,7 @@ class EvtPreprocessWorker(QObject):
                 f"坐标: ({h.latitude:.4f}, {h.longitude:.4f})"
             )
             self.log.emit(
-                f"  前导 int32: {h.preamble_count} | "
+                f"  前导 int32: {h.preamble_int32} | "
                 f"有效数据: {evt.sample_count} 点/分量 | "
                 f"采样率: {self.instrument_sample_rate_hz:.0f} Hz | "
                 f"窗口: {self.window_size} 点"

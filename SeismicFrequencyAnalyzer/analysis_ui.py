@@ -82,8 +82,8 @@ class MainWindow(QMainWindow):
         self.evt_output_dir: Path | None = None  # 记录预处理输出目录
 
         self.setWindowTitle(f"{_APP_TITLE} {APP_VERSION}")
-        self.resize(1280, 1020)
-        self.setMinimumSize(1080, 920)
+        self.resize(1400, 1100)
+        self.setMinimumSize(1100, 950)
         self._build_menu()
         self._build_ui()
         self._apply_style()
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
         self.sample_rate_combo = QComboBox()
         for label, _ in _SAMPLE_RATE_OPTIONS:
             self.sample_rate_combo.addItem(label)
-        self.sample_rate_combo.setCurrentIndex(1)  # 默认 100 Hz
+        self.sample_rate_combo.setCurrentIndex(0)  # 默认 50 Hz
         layout.addWidget(self.sample_rate_combo, 2, 1)
 
         # 分量选择（始终处理全部三分量）

@@ -34,7 +34,7 @@ QWidget#root {
     background: #eef2f7;
     color: #182230;
     font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-    font-size: 13px;
+    font-size: 14px;
 }
 QFrame#header {
     background: #ffffff;
@@ -48,7 +48,7 @@ QLabel#appTitle {
 }
 QLabel#appSubtitle {
     color: #526070;
-    font-size: 13px;
+    font-size: 14px;
 }
 QLabel#versionBadge {
     min-width: 68px;

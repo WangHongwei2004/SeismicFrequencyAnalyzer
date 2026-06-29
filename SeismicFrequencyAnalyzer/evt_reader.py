@@ -8,31 +8,34 @@ from pathlib import Path
 import numpy as np
 
 
+# ── 常量 ────────────────────────────────────────────────────────
+
+_BLOCK_SIZE = 50          # 每分量每块 50 个 int32
+_GAP_SIZE = 1             # 每 3 块后 1 个间隙
+_CYCLE_SIZE = _BLOCK_SIZE * 3 + _GAP_SIZE  # 151
+
+
 # ── 数据类 ──────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class EvtHeader:
-    """EVT 文件全局头段信息。"""
     station_id: int
     station_name: str
     instrument: str
     latitude: float
     longitude: float
     elevation_m: float
-    component_count: int
-    data_format: int
     record_time: datetime | None
-    preamble_count: int   # 数据区前导 int32 个数
-    total_samples: int    # 每分量样本数
+    preamble_int32: int     # 第一个 UD 块在 int32 流中的偏移
+    total_frames: int       # 每分量有效样本数
 
 
 @dataclass(frozen=True)
 class EvtData:
-    """EVT 三分量数据（已去前导、分块）。"""
     header: EvtHeader
-    ew: np.ndarray   # float64
-    ns: np.ndarray   # float64
-    ud: np.ndarray   # float64
+    ew: np.ndarray
+    ns: np.ndarray
+    ud: np.ndarray
 
     @property
     def sample_count(self) -> int:
@@ -42,26 +45,12 @@ class EvtData:
 # ── 公共 API ────────────────────────────────────────────────────
 
 def read_evt(file_path: str | Path) -> EvtData:
-    """读取 EVT 文件，返回三分量数据。
-
-    EVT 数据区格式（int32 顺序三块）：
-      [preamble int32] [UD block int32] [NS block int32] [EW block int32]
-
-    Parameters
-    ----------
-    file_path : str or Path
-
-    Returns
-    -------
-    EvtData
-    """
     file_path = Path(file_path)
     data = np.fromfile(file_path, dtype=np.uint8)
 
     if b"digital event" not in data[:16].tobytes():
         raise ValueError(f"不是有效的 EVT 文件: {file_path}")
 
-    # ── 全局头段 ──
     station_id = int(struct.unpack_from("<I", data, 0x100)[0])
     fmt_flag   = int(struct.unpack_from("<H", data, 0x10A)[0])
 
@@ -82,33 +71,32 @@ def read_evt(file_path: str | Path) -> EvtData:
     elevation_m  = float(struct.unpack_from("<f", data, 0x84)[0])
 
     # ── 数据区 ──
-    data_start = _find_data_start(data)
-    raw = data[data_start:]                  # uint8
+    dstart = _find_data_start(data)
+    raw = data[dstart:]
     n_int32 = len(raw) // 4
-    arr = raw[:n_int32 * 4].view(np.int32)   # 所有 int32
+    arr = raw[:n_int32 * 4].view(np.int32)
 
-    preamble = _find_preamble_int32(arr)
-    body = arr[preamble:]                    # 去掉前导
-    n_per = len(body) // 3                   # 每分量样本数
-    body = body[:n_per * 3]                  # 截齐
+    preamble = _find_preamble(arr)
+    body = arr[preamble:]
+    total_cycles = len(body) // _CYCLE_SIZE
+    total_per_comp = total_cycles * _BLOCK_SIZE
 
-    # 三块顺序：UD / NS / EW（与现有 COMPONENT_NAMES 一致: 0=UD, 1=NS, 2=EW）
-    ud = body[0 * n_per:1 * n_per].astype(np.float64)
-    ns = body[1 * n_per:2 * n_per].astype(np.float64)
-    ew = body[2 * n_per:3 * n_per].astype(np.float64)
+    ew = np.zeros(total_per_comp, dtype=np.float64)
+    ns = np.zeros(total_per_comp, dtype=np.float64)
+    ud = np.zeros(total_per_comp, dtype=np.float64)
+
+    for cyc in range(total_cycles):
+        base = cyc * _CYCLE_SIZE
+        off = cyc * _BLOCK_SIZE
+        ud[off:off + _BLOCK_SIZE] = body[base + 0 * _BLOCK_SIZE:base + 1 * _BLOCK_SIZE]
+        ns[off:off + _BLOCK_SIZE] = body[base + 1 * _BLOCK_SIZE:base + 2 * _BLOCK_SIZE]
+        ew[off:off + _BLOCK_SIZE] = body[base + 2 * _BLOCK_SIZE:base + 3 * _BLOCK_SIZE]
 
     header = EvtHeader(
-        station_id=station_id,
-        station_name=station_name,
-        instrument=instrument,
-        latitude=latitude,
-        longitude=longitude,
-        elevation_m=elevation_m,
-        component_count=3,
-        data_format=fmt_flag,
-        record_time=record_time,
-        preamble_count=preamble,
-        total_samples=n_per,
+        station_id=station_id, station_name=station_name,
+        instrument=instrument, latitude=latitude, longitude=longitude,
+        elevation_m=elevation_m, record_time=record_time,
+        preamble_int32=preamble, total_frames=total_per_comp,
     )
 
     return EvtData(header=header, ew=ew, ns=ns, ud=ud)
@@ -122,8 +110,7 @@ def _clean_str(raw: bytes) -> str:
                    for ch in text).strip()
 
 
-def _parse_evt_time(year: int, doy: int, h: int, m: int, s: int, ms: int,
-                    file_path: Path) -> datetime | None:
+def _parse_evt_time(year, doy, h, m, s, ms, file_path) -> datetime | None:
     import re
     m = re.search(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})", file_path.stem)
     if m:
@@ -144,7 +131,6 @@ def _parse_evt_time(year: int, doy: int, h: int, m: int, s: int, ms: int,
 
 
 def _find_data_start(data: np.ndarray) -> int:
-    """查找数据区起始位置。"""
     raw_bytes = data.tobytes()
     for marker in (b"E-W", b"N-S"):
         pos = raw_bytes.find(marker)
@@ -156,22 +142,22 @@ def _find_data_start(data: np.ndarray) -> int:
     return 0x322C
 
 
-def _find_preamble_int32(arr: np.ndarray) -> int:
-    """找到连续合理 int32 数据段的起始位置。
+def _find_preamble(arr: np.ndarray) -> int:
+    """找到第一个 UD 块的起始 int32 索引。
 
-    前导部分通常包含大量零值及孤立异常值，
-    这里寻找第一个前后 50 个值都在合理范围 (abs < 1000万) 的索引。
+    数据格式：arr 开头有一段前导，之后是规整的
+    50-样本块序列 [UD×50][NS×50][EW×50][gap]。
+    搜索连续 5 个合理值的位置作为起始。
     """
-    ok = (arr > 100) & (arr < 10_000_000)
-    # 滑动窗口：连续 50 个 ok 即视为数据开始
-    window = np.convolve(ok.astype(np.int32), np.ones(50, dtype=np.int32), mode='valid')
-    hits = np.where(window >= 50)[0]
-    return int(hits[0]) if len(hits) > 0 else 0
+    for i in range(0, min(20000, len(arr) - 5)):
+        vals = arr[i:i + 5].astype(np.float64)
+        if np.all(np.abs(vals) > 100) and np.max(np.abs(np.diff(vals))) < 1000:
+            return int(i)
+    return 0
 
 
 def find_first_valid_frame(evt_data: EvtData) -> int:
-    """返回前导 int32 个数（对应原始文件中的偏移，用于溯源）。"""
-    return evt_data.header.preamble_count
+    return evt_data.header.preamble_int32
 
 
 def get_component_array(evt_data: EvtData, component: str) -> np.ndarray:
