@@ -103,6 +103,7 @@ class ComponentResult:
     indirect: SpectrumMethodResult
     direct_peaks: tuple[PeakMarker, ...]
     indirect_peaks: tuple[PeakMarker, ...]
+    peak_acceleration_um_s2: float | None = None
 
 
 def parse_args() -> argparse.Namespace:
@@ -639,6 +640,7 @@ def process_file(
         values = corrected_acceleration_um_s2(trace)
         raw_signals[trace.component_name] = raw_values
         corrected_signals[trace.component_name] = values
+        peak_accel = float(np.max(np.abs(values)))
 
         direct_frequencies, direct_amplitudes, direct_power, direct_df = direct_power_spectrum(
             values,
@@ -701,6 +703,7 @@ def process_file(
                 indirect=indirect_result,
                 direct_peaks=direct_peaks,
                 indirect_peaks=indirect_peaks,
+                peak_acceleration_um_s2=peak_accel,
             )
         )
 
@@ -814,6 +817,7 @@ def write_component_csv(results: list[ComponentResult], output_path: Path, peak_
         "间接法卓越频率_Hz",
         "间接法卓越周期_s",
         "间接法峰值功率谱密度",
+        "时域峰值加速度_um_s2",
     ]
     for method_label in ("直接法", "间接法"):
         value_label = "功率谱" if method_label == "直接法" else "功率谱密度"
@@ -862,6 +866,7 @@ def write_component_csv(results: list[ComponentResult], output_path: Path, peak_
                 "间接法卓越频率_Hz": f"{result.indirect.dominant_frequency_hz:.12g}",
                 "间接法卓越周期_s": f"{result.indirect.dominant_period_s:.12g}",
                 "间接法峰值功率谱密度": f"{result.indirect.peak_value:.12g}",
+                "时域峰值加速度_um_s2": f"{result.peak_acceleration_um_s2:.12g}" if result.peak_acceleration_um_s2 is not None else "",
             }
             row.update(peak_fields("直接法", result.direct_peaks))
             row.update(peak_fields("间接法", result.indirect_peaks))
@@ -943,7 +948,8 @@ def main() -> None:
         print(
             f"{result.file_name} {result.component_name}: "
             f"直接法 {result.direct.dominant_frequency_hz:.6f} Hz, "
-            f"间接法 {result.indirect.dominant_frequency_hz:.6f} Hz"
+            f"间接法 {result.indirect.dominant_frequency_hz:.6f} Hz, "
+            f"时域峰值 {result.peak_acceleration_um_s2:.6g} um/s2" if result.peak_acceleration_um_s2 is not None else ""
         )
 
 
