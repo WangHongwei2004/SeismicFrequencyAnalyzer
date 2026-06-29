@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-APP_VERSION = "v1.0.0"
+APP_VERSION = "v1.1.0"
 APP_AUTHOR = "WHW"
 APP_COMPLETION_DATE = "2026.6.27"
 APP_GITHUB_URL = "https://github.com/WangHongwei2004"
