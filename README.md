@@ -1,237 +1,236 @@
-# 瀹介甯﹀湴闇囧姩鍗撹秺棰戠巼鍒嗘瀽
+# 宽频带地震动卓越频率分析
 
-![鐗堟湰](https://img.shields.io/badge/version-v1.1.0-blue)
-![璁稿彲](https://img.shields.io/badge/license-闈炲晢涓氱鐮旀暀瀛﹁鍙?green)
-![骞冲彴](https://img.shields.io/badge/platform-Windows-lightgrey)
-![Python](https://img.shields.io/badge/python-3.10+-yellow)
+> **📥 [下载 Windows 可执行程序（.exe）](https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases/latest)** — 无需安装 Python，下载后双击运行。
 
-> **馃摜 [涓嬭浇 Windows 鍙墽琛岀▼搴忥紙.exe锛塢(https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases/latest)** 鈥斺€?鏃犻渶瀹夎 Python锛岃В鍘嬪嵆鐢ㄣ€?
-[![涓嬭浇 exe](https://img.shields.io/badge/猬?20涓嬭浇-SeismicFrequencyAnalyzer.exe-blue?style=for-the-badge&logo=windows)](https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases/latest)
+一个用于宽频带地震动 TXT/DAT 数据批量处理、频谱绘图和卓越频率判读的 PyQt5 桌面工具。
+v1.1.0 新增 EVT 原始数据智能裁剪功能，可自动筛选最优线性数据段并导出为 DAT 格式。
 
-涓€涓敤浜庡棰戝甫鍦伴渿鍔ㄦ暟鎹壒閲忓鐞嗐€侀璋辩粯鍥惧拰鍗撹秺棰戠巼鍒よ鐨?PyQt5 妗岄潰宸ュ叿銆傛敮鎸佺洿鎺ヨ鍙?EDAS-24 绯诲垪鏁板瓧鍦伴渿浠敓鎴愮殑 EVT 鍘熷浜岃繘鍒舵枃浠讹紝鑷姩绛涢€夋渶浼樼嚎鎬ф暟鎹锛屽啀杩涜鐩存帴娉?闂存帴娉曢璋卞垎鏋愩€?
-杞欢鐗堟湰锛歚v1.1.0`
-浣滆€咃細`WHW`
-瀹屾垚鏃堕棿锛歚2026.6.27`锛坴1.0.0锛夛紝`2026.6.30`锛坴1.1.0 EVT 鏅鸿兘瑁佸壀锛?
-椤圭洰鍦板潃锛?https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer>
+软件版本：`v1.1.0`
+作者：`WHW`
+完成时间：`2026.6.27`（v1.0.0），`2026.6.29`（v1.1.0 EVT 裁剪）
+GitHub：<https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer>
 
----
+## 功能特性
 
-## 鐩綍
+### 频谱分析（v1.0.0）
+- 支持批量读取 `SeismicFrequencyAnalyzer/data` 中的三分量地震动 TXT 数据。
+- 原始数据文件不随仓库发布，请在本地自行放入 TXT 数据。
+- 同时计算直接法频谱和间接法功率谱密度。
+- 自动生成原始计数时程图、校正加速度时程图、直接法频谱图、间接法频谱图。
+- 在频谱图中标注 P1-P4 候选峰，辅助选择合理的卓越频率。
+- 将各分量和平均谱的卓越频率、周期、峰值和 P1-P4 候选峰写入 CSV。
+- 提供 PyQt5 图形界面，可设置选峰范围、显示频率上限和实际处理点数。
 
-- [鍔熻兘鐗规€(#鍔熻兘鐗规€?
-- [杞欢鎴浘](#杞欢鎴浘)
-- [椤圭洰缁撴瀯](#椤圭洰缁撴瀯)
-- [蹇€熷紑濮媇(#蹇€熷紑濮?
-- [鍥惧舰鐣岄潰浣跨敤](#鍥惧舰鐣岄潰浣跨敤)
-- [鍛戒护琛屼娇鐢╙(#鍛戒护琛屼娇鐢?
-- [杈撳嚭鏂囦欢](#杈撳嚭鏂囦欢)
-- [绠楁硶鍘熺悊](#绠楁硶鍘熺悊)
-- [鎵撳寘](#鎵撳寘)
-- [璁稿彲鍗忚](#璁稿彲鍗忚)
+### EVT 原始数据智能裁剪（v1.1.0 新增）
+- 支持直接读取 EDAS-24 系列数字地震仪生成的 `.evt` 原始二进制文件。
+- **三分量联合自动筛选最优数据段**：滑动窗口 + 四维评分算法，对同一窗口位置的三分量分别评分后取平均，确保三分量时间对齐。
+  - 平稳性评分：子窗口统计量（均值/标准差）一致性
+  - 弯曲度惩罚：二次拟合显著优于线性拟合 → 有弯曲漂移
+  - 尖峰检测：基于 MAD 鲁棒统计的异常值检测
+  - 死数据惩罚：全零/常量段
+- 用户手动设置地震仪实际采样率（50 Hz / 100 Hz / 200 Hz），自动从 EVT 内部采样率重采样。
+- 用户可自定义截取长度（1024/2048/4096/8192 点，或自定义任意点数）。
+- 裁剪结果导出为单个 TXT 文件（放入 `data/` 目录），可直接被频谱分析流程读取。
 
----
-
-## 鍔熻兘鐗规€?
-### EVT 鍘熷鏁版嵁鏅鸿兘瑁佸壀锛坴1.1.0 鏍稿績锛?
-瑙ｅ喅瀹介甯﹀湴闇囦华鍘熷鏁版嵁闈炵嚎鎬ф紓绉汇€佸惈澶ч噺骞叉壈銆佹棤娉曠洿鎺ュ幓绾挎紓鐨勯棶棰樸€?
-- **鐩存帴璇诲彇 EVT 浜岃繘鍒?*锛氳В鏋?EDAS-24 绯诲垪鏁板瓧鍦伴渿浠敓鎴愮殑 `.evt` 鏂囦欢锛屾纭В鐮?int32 椤哄簭涓夊潡锛圲D/NS/EW锛夋暟鎹牸寮忋€?- **鎵归噺澶勭悊**锛氭敮鎸侀€夋嫨鍗曚釜鏂囦欢鎴栨暣涓洰褰曪紝涓€娆℃€ф壒閲忚鍓墍鏈?`.evt` 鏂囦欢銆傚崟涓枃浠跺け璐ヤ笉褰卞搷鏁翠綋娴佺▼銆?- **涓夊垎閲忚仈鍚堣嚜鍔ㄧ瓫閫夋渶浼樻暟鎹**锛氭粦鍔ㄧ獥鍙?+ 鍥涚淮璇勫垎绠楁硶锛屽鍚屼竴绐楀彛浣嶇疆鐨勪笁鍒嗛噺鍒嗗埆璇勫垎鍚庡彇骞冲潎锛?*纭繚涓夊垎閲忔椂闂村榻?*锛堜笉浼氬悇鍙栧悇鐨勬渶浼樻锛夈€?  - **骞崇ǔ鎬ц瘎鍒?*锛堟潈閲?0.50锛夛細瀛愮獥鍙ｇ粺璁￠噺锛堝潎鍊?鏍囧噯宸級涓€鑷存€?  - **寮洸搴︽儵缃?*锛堟潈閲?0.25锛夛細浜屾鎷熷悎鏄捐憲浼樹簬绾挎€ф嫙鍚?鈫?鏈夊集鏇叉紓绉伙紝閲嶇綒
-  - **灏栧嘲妫€娴?*锛堟潈閲?0.10锛夛細鍩轰簬 MAD锛堜腑浣嶆暟缁濆鍋忓樊锛夐瞾妫掔粺璁＄殑寮傚父鍊兼娴?  - **姝绘暟鎹儵缃?*锛堟潈閲?0.15锛夛細鍏ㄩ浂/甯搁噺娈?- **閲囨牱鐜囧畬鍏ㄧ敱鐢ㄦ埛璁剧疆**锛?0 Hz / 100 Hz / 200 Hz锛堥粯璁?50 Hz锛夈€備笉璇诲彇 EVT 鍐呴儴閲囨牱鐜囧弬鏁帮紝鍥犱负閭ｆ槸浠櫒鍐呴儴鍊间笉鍙潬锛涚敤鎴疯缃殑鎵嶆槸鍦伴渿浠疄闄呭伐浣滈噰鏍风巼锛屾墍鏈夋埅鍙栭暱搴﹀拰鏃堕棿璁＄畻閮藉熀浜庢銆?- **鎴彇闀垮害鍙嚜瀹氫箟**锛氶璁?1024/2048/4096/8192 鐐癸紝鎴栧嬀閫?鑷畾涔?杈撳叆浠绘剰鐐规暟銆?- **婊戝姩姝ラ暱鍙嚜瀹氫箟**锛氳嚜鍔紙绐楀彛/4锛? 128 鐐?/ 256 鐐?/ 512 鐐癸紝姝ラ暱瓒婂皬閫夊彇瓒婄簿缁嗐€?- **杈撳嚭鏂囦欢鍚嶇洿瑙?*锛歚{鍘熷鏂囦欢鍚峿_{鎴彇璧峰鏃堕棿}s.txt`锛屼緥濡?`202606071041_568.4s.txt`銆?- **瀵煎嚭鏍煎紡鍏煎**锛氳鍓粨鏋滃鍑轰负鍗曚釜 TXT 鏂囦欢锛堟斁鍏?`data/` 鐩綍锛夛紝鏍煎紡鍏煎鐜版湁 `load_traces()` 瑙ｆ瀽閫昏緫锛屽彲鐩存帴杩涘叆棰戣氨鍒嗘瀽娴佺▼銆傛枃浠跺ご璁板綍瑁佸壀鍏冧俊鎭紙璧峰/缁撴潫鐐瑰彿銆佹椂闂淬€佸緱鍒嗭級銆?
-### 棰戣氨鍒嗘瀽锛坴1.0.0 + v1.1.0 澧炲己锛?
-- 鎵归噺璇诲彇 `data/` 鐩綍涓殑涓夊垎閲忓湴闇囧姩 TXT/DAT 鏁版嵁锛堟敮鎸?`.txt` 鍜?`.dat` 涓ょ鎵╁睍鍚嶏級銆?- 鍘熷鏁版嵁鏂囦欢涓嶉殢浠撳簱鍙戝竷锛岃鍦ㄦ湰鍦拌嚜琛屾斁鍏ャ€?- 鍚屾椂璁＄畻**鐩存帴娉曢璋?*锛團FT 鈫?骞呭€艰氨 鈫?骞虫柟 鈫?鍔熺巼璋憋級鍜?*闂存帴娉曞姛鐜囪氨瀵嗗害**锛堣嚜鐩稿叧 鈫?FFT 鈫?闄や互棰戠巼鍒嗚鲸鐜囷級銆?- 鑷姩鐢熸垚鍥涘紶鍥撅細鍘熷璁℃暟鏃剁▼銆佹牎姝ｅ姞閫熷害鏃剁▼锛堝幓浠櫒鍝嶅簲/闆舵紓/绾挎紓锛夈€佺洿鎺ユ硶棰戣氨銆侀棿鎺ユ硶棰戣氨銆?- 棰戣氨鍥句腑鏍囨敞 P1-P4 鍊欓€夊嘲锛岃緟鍔╅€夋嫨鍚堢悊鐨勫崜瓒婇鐜囥€?- **CSV 鏂板鏃跺煙宄板€煎姞閫熷害锛埼糾/s虏锛?*锛氬垪鍑烘瘡涓垎閲忔牎姝ｅ悗鍔犻€熷害鐨勬椂鍩熷嘲鍊笺€?- 榛樿鍙傛暟宸蹭紭鍖栵細閫夊嘲鑼冨洿 1-8 Hz銆侀璋辨樉绀轰笂闄?15 Hz锛堝父鐢ㄨ寖鍥达級锛屽潎鍙墜鍔ㄤ慨鏀广€?- 鎻愪緵 PyQt5 鍥惧舰鐣岄潰锛岀獥鍙ｅ鏁烇紙1460脳1180锛夛紝鍙缃€夊嘲鑼冨洿銆佹樉绀洪鐜囦笂闄愬拰瀹為檯澶勭悊鐐规暟銆?
----
-
-## 杞欢鎴浘
-
-杞欢涓荤晫闈紙v1.1.0锛夊寘鍚?EVT 棰勫鐞嗛潰鏉裤€侀璋卞垎鏋愯矾寰勪笌鍙傛暟銆佽繍琛屾棩蹇楋細
-
----
-
-## 椤圭洰缁撴瀯
+## 项目结构
 
 ```text
 .
-鈹溾攢鈹€ README.md
-鈹溾攢鈹€ requirements.txt                            # numpy, matplotlib, PyQt5
-鈹溾攢鈹€ LICENSE
-鈹溾攢鈹€ .gitignore
-鈹溾攢鈹€ SeismicFrequencyAnalyzer.spec               # PyInstaller 鎵撳寘閰嶇疆
-鈹溾攢鈹€ SeismicFrequencyAnalyzer/
-鈹?  鈹溾攢鈹€ analysis_ui.py                          # PyQt5 鍥惧舰鐣岄潰鍏ュ彛
-鈹?  鈹溾攢鈹€ analysis_worker.py                      # 鍚庡彴棰戣氨鍒嗘瀽绾跨▼
-鈹?  鈹溾攢鈹€ evt_preprocess_worker.py                # 鍚庡彴 EVT 鎵归噺棰勫鐞嗙嚎绋嬶紙v1.1.0锛?鈹?  鈹溾攢鈹€ evt_reader.py                           # EDAS EVT 浜岃繘鍒舵牸寮忚В鏋愬櫒锛坴1.1.0锛?鈹?  鈹溾攢鈹€ segment_selector.py                     # 鏈€浼樻暟鎹鑷姩绛涢€夌畻娉曪紙v1.1.0锛?鈹?  鈹溾攢鈹€ dat_exporter.py                         # DAT/TXT 鏍煎紡瀵煎嚭妯″潡锛坴1.1.0锛?鈹?  鈹溾攢鈹€ app_info.py                             # 杞欢鐗堟湰銆佷綔鑰呭拰榛樿閰嶇疆
-鈹?  鈹溾攢鈹€ dominant_frequency_two_methods.py       # 鐩存帴娉?闂存帴娉曚富鍒嗘瀽娴佺▼
+├── README.md
+├── requirements.txt
+├── LICENSE
+├── .gitignore
+├── SeismicFrequencyAnalyzer.spec
+├── SeismicFrequencyAnalyzer/
+│   ├── analysis_ui.py                         # PyQt5 图形界面入口
+│   ├── analysis_worker.py                     # 后台频谱分析线程
+│   ├── evt_preprocess_worker.py               # 后台 EVT 预处理线程（v1.1.0）
+│   ├── evt_reader.py                          # EDAS EVT 二进制格式解析器（v1.1.0）
+│   ├── segment_selector.py                    # 最优数据段自动筛选算法（v1.1.0）
+│   ├── dat_exporter.py                        # DAT 格式导出模块（v1.1.0）
+│   ├── app_info.py                            # 软件版本、作者和默认配置
+│   ├── dominant_frequency_two_methods.py      # 直接法/间接法主分析流程
+│   ├── ui_style.py                            # 界面样式表
+│   ├── data/                                  # 本地 TXT 数据目录，原始数据不提交
+│   ├── evt_dat_output/                        # EVT 裁剪 DAT 输出目录（v1.1.0）
+│   └── two_method_spectrum_output/            # 直接法/间接法频谱分析结果
+├── build/                                     # PyInstaller 构建缓存，建议不提交
+└── dist/                                      # 打包后的 exe，建议发布时单独上传
+```
 
----
+## 环境安装
 
-## 蹇€熷紑濮?
-### 鏂瑰紡涓€锛氫笅杞?exe锛堟帹鑽愭櫘閫氱敤鎴凤級
+建议使用 Python 3.10 或更高版本。
 
-鍓嶅線 [Releases 椤甸潰](https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases/latest) 涓嬭浇 `SeismicFrequencyAnalyzer.exe`锛屽弻鍑昏繍琛屽嵆鍙紝鏃犻渶瀹夎 Python 鐜銆?
-[![涓嬭浇 exe](https://img.shields.io/badge/猬?20涓嬭浇-SeismicFrequencyAnalyzer.exe-blue?style=for-the-badge&logo=windows)](https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases/latest)
-
-### 鏂瑰紡浜岋細浠庢簮鐮佽繍琛?
-寤鸿浣跨敤 Python 3.10 鎴栨洿楂樼増鏈€?
 ```powershell
-git clone https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer.git
-cd SeismicFrequencyAnalyzer
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+```
+
+如果使用 Anaconda，也可以在当前环境中直接执行：
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+### 依赖
+
+| 包 | 用途 |
+|----|------|
+| `numpy` | 数值计算、FFT、多项式拟合 |
+| `matplotlib` | 频谱图、时程图绘制 |
+| `PyQt5` | 图形界面 |
+
+## 图形界面运行
+
+```powershell
 python SeismicFrequencyAnalyzer\analysis_ui.py
 ```
 
-#### 渚濊禆
+### EVT 预处理面板
 
-| 鍖?| 鐢ㄩ€?|
-|----|------|
-| `numpy` | 鏁板€艰绠椼€丗FT銆佸椤瑰紡鎷熷悎 |
-| `matplotlib` | 棰戣氨鍥俱€佹椂绋嬪浘缁樺埗 |
-| `PyQt5` | 鍥惧舰鐣岄潰 |
+界面顶部为 **"EVT 数据预处理 — 自动筛选最优线性段"** 面板：
 
----
+1. **选择 EVT 文件**：点击"浏览..."选择 `.evt` 原始数据文件。
+2. **设置截取长度**：从下拉框选择预设值（1024/2048/4096/8192 点），或勾选"自定义"手动输入任意点数。
+3. **地震仪采样率**：选择地震仪实际工作采样率（50 Hz / 100 Hz / 200 Hz），默认 100 Hz。软件自动从 EVT 内部采样率重采样到目标采样率。
+4. **点击"裁剪并导出 DAT"**：后台自动解析 EVT → 重采样 → 三分量联合搜索最优窗口 → 导出单个 DAT 文件。
+5. 处理完成后点击"打开 DAT 输出目录"查看结果。
 
-## 鍥惧舰鐣岄潰浣跨敤
+### 频谱分析面板
 
-鍚姩鍚庣晫闈㈠垎涓轰笂涓嬩袱閮ㄥ垎锛?*EVT 棰勫鐞?*锛堜笂锛夊拰 **棰戣氨鍒嗘瀽**锛堜笅锛夈€?
-### EVT 棰勫鐞嗛潰鏉?
-1. **閫夋嫨 EVT 鏂囦欢/鐩綍**锛氱偣鍑?娴忚鏂囦欢..."閫夋嫨鍗曚釜 `.evt`锛屾垨鐐瑰嚮"娴忚鐩綍..."閫夋嫨鍖呭惈澶氫釜 `.evt` 鐨勭洰褰曡繘琛屾壒閲忓鐞嗐€?2. **鎴彇闀垮害**锛氫笅鎷夐€夋嫨 1024/2048锛堥粯璁わ級/4096/8192 鐐癸紝鎴栧嬀閫?鑷畾涔?鎵嬪姩杈撳叆浠绘剰鐐规暟銆?3. **鍦伴渿浠噰鏍风巼**锛氶€夋嫨鍦伴渿浠疄闄呭伐浣滈噰鏍风巼锛岄粯璁?**50 Hz**锛堝彲閫?100/200 Hz锛夈€?4. **婊戝姩姝ラ暱**锛氶粯璁?鑷姩"锛堢獥鍙ｅぇ灏?4锛夛紝鍙€?128/256/512 鐐癸紝姝ラ暱瓒婂皬閫夊彇瓒婄簿缁嗕絾鑰楁椂瓒婇暱銆?5. **鐐瑰嚮"瑁佸壀骞跺鍑?TXT"**锛氬悗鍙版壒閲忚В鏋?鈫?涓夊垎閲忚仈鍚堟悳绱㈡渶浼樼獥鍙?鈫?瀵煎嚭 `{鍘熷悕}_{璧峰鏃堕棿}s.txt` 鍒?`data/` 鐩綍銆?6. 澶勭悊瀹屾垚鍚庣偣鍑?鎵撳紑鏁版嵁鐩綍"鏌ョ湅缁撴灉锛屽彲鐩存帴鐢ㄤ簬棰戣氨鍒嗘瀽銆?
-### 棰戣氨鍒嗘瀽闈㈡澘
+界面默认设置：
 
-榛樿璁剧疆锛?
-| 鍙傛暟 | 榛樿鍊?| 璇存槑 |
-|------|--------|------|
-| 鏁版嵁鐩綍 | `SeismicFrequencyAnalyzer/data` | 鍚?TXT/DAT 涓夊垎閲忔暟鎹?|
-| 杈撳嚭鐩綍 | `SeismicFrequencyAnalyzer/two_method_spectrum_output` | 鍥句笌 CSV 杈撳嚭 |
-| 閫夊嘲涓嬮檺 | **1 Hz** | 閬垮紑浣庨婕傜Щ |
-| 閫夊嘲涓婇檺 | **8 Hz**锛?=涓嶈涓婇檺锛屾悳鍒?Nyquist锛?| 甯哥敤鑼冨洿 |
-| 棰戣氨鍥炬樉绀轰笂闄?| **15 Hz**锛?=鏄剧ず鍒?Nyquist锛?| 甯哥敤鑼冨洿 |
-| 瀹為檯澶勭悊鐐规暟 | 0锛堝叏閮級 | 0 琛ㄧず浣跨敤鍏ㄩ儴鏍锋湰 |
+- 数据目录：`SeismicFrequencyAnalyzer/data`
+- 输出目录：`SeismicFrequencyAnalyzer/two_method_spectrum_output`
+- 选峰上限为 `0` 时表示不设上限，搜索到 Nyquist 频率。
+- 频谱图显示上限为 `0` 时表示显示到 Nyquist 频率。
+- 实际处理点数为 `0` 时表示使用全部样本。
 
-鐐瑰嚮"寮€濮嬪垎鏋?鍗冲彲鎵归噺澶勭悊 `data/` 鐩綍涓嬫墍鏈?TXT/DAT 鏂囦欢銆?
----
+## 命令行运行
 
-## 鍛戒护琛屼娇鐢?
-### 棰戣氨鍒嗘瀽
+### 频谱分析
+
+```powershell
+python SeismicFrequencyAnalyzer\dominant_frequency_two_methods.py
+```
+
+常用参数示例：
 
 ```powershell
 python SeismicFrequencyAnalyzer\dominant_frequency_two_methods.py `
   --data-dir SeismicFrequencyAnalyzer\data `
   --output-dir SeismicFrequencyAnalyzer\two_method_spectrum_output `
   --min-peak-frequency 1 `
-  --max-peak-frequency 8 `
-  --plot-max-frequency 15
+  --max-peak-frequency 25 `
+  --plot-max-frequency 25
 ```
 
-### EVT 瑁佸壀锛圥ython 鑴氭湰璋冪敤锛?
+说明：如果低频漂移影响卓越频率判断，建议将 `--min-peak-frequency` 或界面中的"选峰下限 Hz"设置为 `1` 或 `2`，再重新运行。
+
+### EVT 裁剪（Python 脚本调用）
+
 ```python
-from pathlib import Path
-from evt_reader import read_evt
-from segment_selector import find_best_segment_three_component
+from evt_reader import read_evt, find_first_valid_frame, get_component_array
+from segment_selector import find_best_segment_three_component, resample_data
 from dat_exporter import export_three_component_dat
 
+# 读取 EVT
 evt = read_evt("path/to/file.evt")
+first = find_first_valid_frame(evt)
+ew = get_component_array(evt, "EW")[first:]
+ns = get_component_array(evt, "NS")[first:]
+ud = get_component_array(evt, "UD")[first:]
 h = evt.header
 
-# 涓夊垎閲忚仈鍚堟悳绱㈡渶浼樼獥鍙ｏ紙閲囨牱鐜囩敱鐢ㄦ埛鎸囧畾锛屽 50 Hz锛?INSTRUMENT_SR = 50.0
-result = find_best_segment_three_component(
-    evt.ew, evt.ns, evt.ud,
-    window_size=2048,
-    sample_rate_hz=INSTRUMENT_SR,
-    step=512,  # 鑷畾涔夋闀匡紝None=鑷姩
-)
+# 重采样到地震仪实际采样率（如 100 Hz）
+INSTRUMENT_SR = 100.0
+ew = resample_data(ew.astype(float), h.sample_rate_hz, INSTRUMENT_SR)
+ns = resample_data(ns.astype(float), h.sample_rate_hz, INSTRUMENT_SR)
+ud = resample_data(ud.astype(float), h.sample_rate_hz, INSTRUMENT_SR)
+
+# 三分量联合搜索最优窗口（同一时间窗口，保证时间对齐）
+result = find_best_segment_three_component(ew, ns, ud, window_size=1024,
+                                           sample_rate_hz=INSTRUMENT_SR)
 bw = result.best_window
 
-# 瀵煎嚭鍗曚釜 TXT 鏂囦欢锛堝吋瀹?load_traces()锛?start_time_s = bw.start_index / INSTRUMENT_SR
+# 导出单个 DAT 文件（兼容 load_traces()）
 export_three_component_dat(
     ew_data=result.ew_data,
     ns_data=result.ns_data,
     ud_data=result.ud_data,
-    output_path=f"output_{start_time_s:.1f}s.txt",
+    output_path="output.dat",
     sample_rate_hz=INSTRUMENT_SR,
-    start_sample_index=bw.start_index,
-    end_sample_index=bw.end_index,
+    start_sample_index=first + bw.start_index,
+    end_sample_index=first + bw.end_index,
     original_file="file.evt",
+    original_sample_rate_hz=h.sample_rate_hz,
 )
 ```
 
----
+## 输出文件
 
-## 杈撳嚭鏂囦欢
+### 频谱分析输出
 
-### EVT 瑁佸壀 TXT 杈撳嚭
+每个输入文件会生成一个同名子目录，包含：
 
-杈撳嚭鐩綍锛歚SeismicFrequencyAnalyzer/data/`锛堜笌棰戣氨鍒嗘瀽杈撳叆鐩綍涓€鑷达紝鍙棤缂濊鎺ワ級
+- `*_01_raw_counts_time_history.png`
+- `*_02_corrected_acceleration_time_history_um_s2.png`
+- `*_03_direct_spectrum.png`
+- `*_04_indirect_spectrum.png`
 
-鏂囦欢鍚嶏細`{鍘熷鏂囦欢鍚峿_{鎴彇璧峰鏃堕棿}s.txt`锛屼緥濡?`202606071041_568.4s.txt`
+汇总表：
 
-鏍煎紡鍏煎鐜版湁 TXT 瑙ｆ瀽閫昏緫锛坄load_traces()`锛夛紝鍏冧俊鎭紪鐮佸湪绗竴涓垎閲忓ご琛岋細
+- `component_direct_indirect_results.csv`
+
+CSV 中包含直接法和间接法的卓越频率、卓越周期、峰值，以及 P1-P4 候选峰频率、周期和峰值。
+
+### EVT 裁剪 DAT 输出
+
+输出目录：`SeismicFrequencyAnalyzer/evt_dat_output/`
+
+生成单个 `.dat` 文件，命名格式：`{原始文件名}.dat`
+
+DAT 文件格式兼容现有 TXT 解析逻辑（`load_traces()`），可直接用于频谱分析：
 
 ```
-; samp: 50.0000; comp: 0; Data length:40.960000; Original: 202606071041.evt; RecordTime: 2026-06-07 10:41:00; StartIdx: 28420; EndIdx: 30468; StartTime: 568.400000s; EndTime: 609.360000s; window_score: 0.4292; ew_score: 0.4866; ns_score: 0.4140; ud_score: 0.3871
-<UD 鏁版嵁鍊硷紝姣忚涓€涓?
-; samp: 50.0000; comp: 1; Data length:40.960000
-<NS 鏁版嵁鍊硷紝姣忚涓€涓?
-; samp: 50.0000; comp: 2; Data length:40.960000
-<EW 鏁版嵁鍊硷紝姣忚涓€涓?
+; samp: 100.0000; comp: 0; Data length:10.240000; Original: 202606071041.evt; ...
+<UD 数据值，每行一个>
+; samp: 100.0000; comp: 1; Data length:10.240000
+<NS 数据值，每行一个>
+; samp: 100.0000; comp: 2; Data length:10.240000
+<EW 数据值，每行一个>
 ```
 
-| 瀛楁 | 鍚箟 |
+头信息说明（编码在第一个分量头行中）：
+
+| 字段 | 含义 |
 |------|------|
-| `samp` | 閲囨牱鐜囷紙Hz锛岀敤鎴疯缃級 |
-| `comp` | 鍒嗛噺鍙凤紙0=UD, 1=NS, 2=EW锛?|
-| `Data length` | 鏁版嵁鏃堕暱锛堢锛?|
-| `Original` | 鍘熷 EVT 鏂囦欢鍚?|
-| `RecordTime` | 鍘熷鏁版嵁璁板綍鏃堕棿 |
-| `StartIdx / EndIdx` | 鎴彇璧峰/缁撴潫鐐瑰彿 |
-| `StartTime / EndTime` | 鎴彇璧锋鏃堕棿锛堢锛?|
-| `*_score` | 缁煎悎寰楀垎鍙婁笁鍒嗛噺鍚勮嚜寰楀垎 |
+| `samp` | 采样率（Hz） |
+| `comp` | 分量号（0=UD, 1=NS, 2=EW） |
+| `Data length` | 数据时长（秒） |
+| `Original` | 原始 EVT 文件名 |
+| `RecordTime` | 原始数据记录时间 |
+| `StartIdx / EndIdx` | 截取起始/结束点号（相对于原始文件全帧） |
+| `StartTime / EndTime` | 截取起止时间（秒） |
 
-### 棰戣氨鍒嗘瀽杈撳嚭
+## 打包
 
-姣忎釜杈撳叆鏂囦欢鐢熸垚涓€涓悓鍚嶅瓙鐩綍锛屽寘鍚細
-
-- `*_01_raw_counts_time_history.png` 鈥?鍘熷璁℃暟鏃剁▼锛堜笁鍒嗛噺锛?- `*_02_corrected_acceleration_time_history_um_s2.png` 鈥?鏍℃鍔犻€熷害鏃剁▼
-- `*_03_direct_spectrum.png` 鈥?鐩存帴娉曢璋?+ P1-P4 鍊欓€夊嘲
-- `*_04_indirect_spectrum.png` 鈥?闂存帴娉曞姛鐜囪氨瀵嗗害 + P1-P4 鍊欓€夊嘲
-
-姹囨€昏〃 `component_direct_indirect_results.csv`锛屽寘鍚細
-
-- 鐩存帴娉?闂存帴娉曞崜瓒婇鐜囥€佸崜瓒婂懆鏈熴€佸嘲鍊?- P1-P4 鍊欓€夊嘲棰戠巼銆佸懆鏈熴€佸嘲鍊?- **鏃跺煙宄板€煎姞閫熷害锛埼糾/s虏锛?* 鈥斺€?姣忎釜鍒嗛噺鏍℃鍚庡姞閫熷害鐨勬椂鍩熷嘲鍊?
----
-
-## 绠楁硶鍘熺悊
-
-### 绾挎€у幓婕傜Щ锛坮emove_linear_drift锛?
-閲囩敤**鏈€灏忎簩涔樼嚎鎬ф嫙鍚?*锛氬绐楀彛鍐呮暟鎹嫙鍚?`y = a路x + b`锛岃绠楁枩鐜?`a` 鍚庡噺鍘荤嚎鎬ц秼鍔?`a路x`銆傚墠鎻愭槸鏁版嵁鏈韩鏄嚎鎬х殑锛堝彧鏈夊潎鍖€婕傜Щ锛屾病鏈夊集鏇诧級锛岃繖姝ｆ槸闇€瑕佸厛瑁佸壀鍑虹嚎鎬ф鐨勫師鍥犮€?
-### 鏈€浼樻暟鎹绛涢€夛紙鍥涚淮璇勫垎锛?
-瀵规瘡涓粦鍔ㄧ獥鍙ｄ綅缃紝涓夊垎閲忓垎鍒瘎鍒嗗悗鍙栧钩鍧囷細
-
-| 缁村害 | 鏉冮噸 | 璁＄畻 |
-|------|------|------|
-| 骞崇ǔ鎬?| 0.50 | 瀛愮獥鍙ｅ潎鍊?鏍囧噯宸彉寮傜郴鏁?鈫?`exp(-cv脳k)` |
-| 寮洸搴?| 0.25 | `(RMS_linear - RMS_quad) / RMS_linear`锛屼簩娆℃樉钁椾紭浜庣嚎鎬у垯鎯╃綒 |
-| 灏栧嘲 | 0.10 | MAD 椴佹缁熻锛岃秴 5脳robust_std 鐨勭偣鍗犳瘮 |
-| 姝绘暟鎹?| 0.15 | 鍏ㄩ浂/甯搁噺娈垫垨澶ч噺鎺ヨ繎闆跺€?|
-
-鎬诲垎 = `0.50脳骞崇ǔ鎬?- 0.25脳寮洸 - 0.10脳灏栧嘲 - 0.15脳姝诲尯`锛屽彇鏈€楂樺垎绐楀彛銆?
-### 鐩存帴娉?vs 闂存帴娉?
-- **鐩存帴娉?*锛氭椂鍩熶俊鍙?鈫?FFT 鈫?骞呭€艰氨 鈫?骞虫柟 鈫?鍔熺巼璋?- **闂存帴娉?*锛氭椂鍩熶俊鍙?鈫?鑷浉鍏冲嚱鏁?鈫?FFT 鈫?鍔熺巼璋?鈫?闄や互棰戠巼鍒嗚鲸鐜?鈫?鍔熺巼璋卞瘑搴?
----
-
-## 鎵撳寘
-
-浣跨敤 PyInstaller 鎵撳寘涓?Windows 鐙珛鍙墽琛岀▼搴忥細
+确认功能稳定后，可以使用 PyInstaller 打包：
 
 ```powershell
 python -m PyInstaller SeismicFrequencyAnalyzer.spec --noconfirm
 ```
 
-鐢熸垚鏂囦欢浣嶄簬 `dist/SeismicFrequencyAnalyzer.exe`锛屽彂甯冩椂涓婁紶鍒?[GitHub Releases](https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer/releases)銆?
----
+生成文件位于 `dist/SeismicFrequencyAnalyzer.exe`。
 
-## 璁稿彲鍗忚
+## 许可协议
 
-鏈」鐩娇鐢?*鑷畾涔夐潪鍟嗕笟绉戠爺鏁欏璁稿彲鍗忚**锛屽厑璁镐釜浜鸿嚜鐢ㄣ€佹暀瀛︺€佺鐮斻€佽绋嬪疄楠屻€侀潪鍟嗕笟璇勪及鍜岄潪鍟嗕笟浜屾寮€鍙戙€?
-鏈粡浣滆€呬功闈㈡巿鏉冿紝涓嶅厑璁稿皢鏈蒋浠舵垨鍏惰鐢熺増鏈敤浜庡晢涓氫骇鍝併€佸晢涓氭湇鍔°€佷粯璐瑰挩璇€佷粯璐瑰煿璁€佸晢涓氭暟鎹鐞嗐€佸晢涓氬伐浣滄祦闆嗘垚銆佽浆鍞€佺璧併€佸啀璁稿彲鎴栧叾浠栦互鍟嗕笟鍒╃泭涓轰富瑕佺洰鐨勭殑鍦烘櫙銆?
-濡傞渶鍟嗕笟鎺堟潈锛岃閫氳繃椤圭洰鍦板潃鑱旂郴锛?https://github.com/WangHongwei2004/SeismicFrequencyAnalyzer>銆?
-鎻愪氦鍒?GitHub 鏃讹紝寤鸿鎻愪氦婧愮爜銆丷EADME銆乺equirements銆丩ICENSE 鍜屽繀瑕佸崰浣嶆枃浠讹紱`build/`銆乣dist/`銆乣__pycache__/`銆佸師濮嬫暟鎹€佸垎鏋愯緭鍑哄浘鍜?CSV 灞炰簬鏈湴鏂囦欢鎴栫敓鎴愮墿锛岄粯璁ら€氳繃 `.gitignore` 鎺掗櫎銆?
+本项目使用自定义非商业科研教学许可协议，允许个人自用、教学、科研、课程实验、非商业评估和非商业二次开发。
+
+未经作者书面授权，不允许将本软件或其衍生版本用于商业产品、商业服务、付费咨询、付费培训、商业数据处理、商业工作流集成、转售、租赁、再许可或其他以商业利益为主要目的的场景。
+
+如需商业授权，请通过作者 GitHub 主页联系：<https://github.com/WangHongwei2004>。
+
+提交到 GitHub 时，建议提交源码、README、requirements、LICENSE 和必要占位文件；`build/`、`dist/`、`__pycache__/`、原始数据、分析输出图和 CSV 属于本地文件或生成物，默认通过 `.gitignore` 排除。
